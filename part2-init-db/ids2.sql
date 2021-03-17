@@ -1,66 +1,75 @@
 --=======-TYPY-ENTIT-=======--
+
 -- uvodny drop a nastavenie oblasti na cz (kvoli spravnemu formatu datumu)
+DROP TABLE magia CASCADE CONSTRAINTS;
+DROP TABLE element CASCADE CONSTRAINTS;
+DROP TABLE zvitok CASCADE CONSTRAINTS;
+DROP TABLE kuzlo CASCADE CONSTRAINTS;
+DROP TABLE kuzelnik CASCADE CONSTRAINTS;
+DROP TABLE grimoar CASCADE CONSTRAINTS;
+DROP TABLE magicke_miesto CASCADE CONSTRAINTS;
+
 
 --=======-TYPY-ENTIT-=======--
 
 create table magia
 (
-   magia_id int primary key,
-   magia_charakter varchar(255),
-   magia_min_uroven_kuzlenia varchar(2)
+   id int primary key,
+   charakter varchar(255),
+   min_uroven_kuzlenia varchar(2)
     --Dlzka posobenia
 );
 
 create table element
 (
-    element_znacka int primary key,
-    element_typ varchar(255),
-    element_specializacia varchar(255),
-    element_uroven_vzacnosti number(2,0),
-    element_forma_vyskytu varchar(255)
+    znacka int primary key,
+    typ varchar(255),
+    specializacia varchar(255),
+    uroven_vzacnosti number(2,0),
+    forma_vyskytu varchar(255)
 );
 
 create table zvitok
 (
-  zvitok_id int primary key,
-  zvitok_stav varchar(32)
+  id int primary key,
+  stav varchar(32)
 );
 
 create table kuzlo
 (
-    kuzlo_ev_cislo int primary key,
-    kuzlo_uroven_zlozitosti varchar(2),
-    kuzlo_typ varchar(255),
-    kuzlo_sila number(2,0),
-    kuzlo_meno varchar(255),
-    kuzlo_formula_vyvolania varchar(255)
+    ev_cislo int primary key,
+    uroven_zlozitosti varchar(2),
+    typ varchar(255),
+    sila number(2,0),
+    meno varchar(255),
+    formula_vyvolania varchar(255)
 );
 
 create table kuzelnik
 (
-  kuzelnik_id int primary key,
-  kuzelnik_pseudonym varchar(255),
-  kuzelnik_datum_zrodenia date,
-  kuzelnik_uroven_kuzlenia varchar(2),
-  kuzelnik_velkost_many number(3,2)
+  id int primary key,
+  pseudonym varchar(255),
+  datum_zrodenia date,
+  uroven_kuzlenia varchar(2),
+  velkost_many number(3,2)
 );
 
 create table grimoar
 (
-    grimoar_msgn int primary key,
-    grimoar_historia_vlastnictva number(3,0),
-    grimoar_mnozstvo_magie number(3,2),
-    grimoar_datum_konca date,
-    gimoar_stav varchar(255)
+    msgn int primary key,
+    historia_vlastnictva number(3,0),
+    mnozstvo_magie number(3,2),
+    datum_konca date,
+    stav varchar(255)
 );
 
 create table magicke_miesto
 (
-    magicke_miesto_gps int primary key,
-    magicke_miesto_miera_presakovania number(3,2),
-    magicke_miesto_oblast varchar(255),
-    magicke_miesto_ulica varchar(255),
-    magicke_miesto_poznavacie_znamenie varchar(255)
+    gps int primary key,
+    miera_presakovania number(3,2),
+    oblast varchar(255),
+    ulica varchar(255),
+    poznavacie_znamenie varchar(255)
 );
 
 --=======-VZTAHY-ENTIT-=======--
