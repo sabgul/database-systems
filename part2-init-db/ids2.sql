@@ -1,3 +1,6 @@
+-- Authors: Sabina Gulcikova, xgulci00@stud.fit.vutbr.cz
+--          Martin Zatovic, xzatov00@stud.fit.vutbr.cz
+
 DROP TABLE magia CASCADE CONSTRAINTS;
 DROP TABLE element CASCADE CONSTRAINTS;
 DROP TABLE zvitok CASCADE CONSTRAINTS;
@@ -10,90 +13,127 @@ DROP TABLE vedlajsi_element_kuzla CASCADE CONSTRAINTS;
 DROP TABLE grimoar_zoskupuje_kuzla CASCADE CONSTRAINTS;
 DROP TABLE kuzelnikova_synergia_s_elementom CASCADE CONSTRAINTS;
 
---=======-TYPY-ENTIT-=======--
--- TODO CHECK ON MSGN
--- TODO CHECK ON GPS
-CREATE TABLE magia
-(
-    id                  INT GENERATED AS IDENTITY NOT NULL,
-    farba               VARCHAR(63) NOT NULL,
-    charakter           VARCHAR(63) NOT NULL,
-    min_uroven_kuzlenia VARCHAR(63),
-    dlzka_posobenia     VARCHAR(63),
-    element             VARCHAR(63),
-    --Dlzka posobenia
+DROP SEQUENCE Magia_seq;
+DROP SEQUENCE Zvitok_seq;
+DROP SEQUENCE Kuzlo_seq;
+DROP SEQUENCE Kuzelnik_seq;
 
-    CONSTRAINT magia_fk FOREIGN KEY (element) REFERENCES element (magicka_znacka) ON DELETE CASCADE,
-);
+-------------------------------
 
+CREATE SEQUENCE Magia_seq
+    START WITH 10000
+    INCREMENT BY 1;
+
+CREATE SEQUENCE Zvitok_seq
+    START WITH 10000
+    INCREMENT BY 1;
+
+CREATE SEQUENCE Kuzlo_seq
+    START WITH 10000
+    INCREMENT BY 1;
+
+CREATE SEQUENCE Kuzelnik_seq
+    START WITH 10000
+    INCREMENT BY 1;
+
+-------------------------------
 CREATE TABLE element
 (
-    magicka_znacka int primary key,
-    typ varchar(255),
-    specializacia varchar(255),
-    uroven_vzacnosti number(2,0),
-    forma_vyskytu varchar(255)
+    -- magicka znacka je ekvivalent chemickej znacky
+    magicka_znacka      VARCHAR(2) PRIMARY KEY,
+    typ                 VARCHAR(15) NOT NULL,
+    specializacia       VARCHAR(254) NOT NULL,
+    uroven_vzacnosti    VARCHAR(31) NOT NULL,
+                        CHECK ( uroven_vzacnosti IN ('veľmi vzácny', 'vzácny', 'štandardný','frekventovaný') ),
+    forma_vyskytu       VARCHAR(63)
 );
 
-CREATE TABLE zvitok
+CREATE TABLE magia
 (
-    id                  INT GENERATED AS IDENTITY NOT NULL,
-    stav                varchar(32),
-    kuzlo               VARCHAR(32),
+    id                  INT DEFAULT Magia_seq.NEXTVAL PRIMARY KEY,
+    farba               VARCHAR(63) NOT NULL,
+    charakter           VARCHAR(63) NOT NULL,
+    min_uroven_kuzlenia VARCHAR(2) NOT NULL
+        CHECK ( min_uroven_kuzlenia IN ('E', 'D', 'C', 'B', 'A', 'S', 'SS')),
+    dlzka_posobenia     VARCHAR(63) NOT NULL,
+    element             VARCHAR(2),
 
-    CONSTRAINT zvitok_fk FOREIGN KEY (kuzlo) REFERENCES kuzlo (ev_cislo)
+    CONSTRAINT magia_fk FOREIGN KEY (element) REFERENCES element (magicka_znacka) ON DELETE CASCADE
 );
 
 CREATE TABLE kuzlo
 (
-    ev_cislo            INT GENERATED AS IDENTITY NOT NULL
-    uroven_zlozitosti_zoslania varchar(2),
-    typ varchar(255),
-    sila number(2,0),
-    meno varchar(255),
-    formula_vyvolania varchar(255)
-    hlasitost_vyvolania
-    carovny_nastroj
-    gesto
+    ev_cislo                    INT DEFAULT Kuzlo_seq.NEXTVAL PRIMARY KEY,
+    uroven_zlozitosti_zoslania  VARCHAR(2) NOT NULL
+                                CHECK ( uroven_zlozitosti_zoslania IN ('E', 'D', 'C', 'B', 'A', 'S', 'SS')),
+    typ                         VARCHAR(127) NOT NULL
+                                CHECK ( typ IN ('verbálne', 'materiálne') ),
+    sila                        INT NOT NULL
+                                CHECK ( sila >= 0 AND sila <= 10),
+    meno                        VARCHAR(127) NOT NULL,
+    formula_vyvolania           VARCHAR(254) NOT NULL,
+    hlasitost_vyvolania         VARCHAR(63) DEFAULT NULL,
+    carovny_nastroj             VARCHAR(127) DEFAULT NULL,
+    gesto                       VARCHAR(254) DEFAULT NULL
 );
 
-CREATE TABLE kuzelnik
+CREATE TABLE zvitok
 (
-    id                  INT GENERATED AS IDENTITY NOT NULL,
-    pseudonym varchar(255),
-    datum_zrodenia date,
-    uroven_kuzlenia varchar(2),
-    velkost_many number(3,2)
+    id                  INT DEFAULT Zvitok_seq.NEXTVAL PRIMARY KEY,
+    stav                VARCHAR(15) NOT NULL CHECK ( stav IN ('plný', 'prázdny') ),
+    kuzlo               INT,
+
+    CONSTRAINT zvitok_fk FOREIGN KEY (kuzlo) REFERENCES kuzlo (ev_cislo)
 );
 
 CREATE TABLE grimoar
 (
-    msgn                    INT GENERATED AS IDENTITY NOT NULL,
-    historia_vlastnictva number(3,0),
-    mnozstvo_magie number(3,2),
-    datum_konca date,
-    stav varchar(255)
+    -- msgn - magical standard grimoire number, ekvivalent ISBN
+    -- uvazujeme format MSGN-10 (ekviv. ISBN-10), pricom kontrolujeme len lexikalnu spravnost
+    -- delitelnost 11 bude overena vhodnym triggerom v dalsej casti projektu
+    -- MSGN 80-204-0105-9
+    msgn                    VARCHAR(18)
+                            CHECK ( LENGTH(msgn) = 18 )
+                            CHECK ( REGEXP_LIKE(msgn, '^MSGN ([0-9]|X|x){1,5}[- ]([0-9]|X|x){1,7}[- ]([0-9]|X|x){1,6}[- ]([0-9]|X|x)$', 'i') ),
+    historia_vlastnictva    INT NOT NULL,
+    mnozstvo_magie          VARCHAR(4) NOT NULL,
+    datum_konca             DATE,
+    stav                    VARCHAR(254) NOT NULL,
+
+    CONSTRAINT grimoar_pk PRIMARY KEY (msgn)
+);
+
+CREATE TABLE kuzelnik
+(
+    id                  INT DEFAULT Kuzelnik_seq.NEXTVAL PRIMARY KEY,
+    pseudonym           VARCHAR(255) NOT NULL,
+    datum_zrodenia      VARCHAR(63),
+    uroven_kuzlenia     VARCHAR(2) NOT NULL
+                        CHECK ( uroven_kuzlenia IN ('E', 'D', 'C', 'B', 'A', 'S', 'SS')),
+    velkost_many        NUMBER(7,2) NOT NULL
 );
 
 CREATE TABLE magicke_miesto
 (
-    gps_suradnice varchar(32),
-    miera_presakovania number(3,2),
-    oblast varchar(255),
-    ulica varchar(255),
-    poznavacie_znamenie varchar(255),
-    presakujuci_element varchar (32),
+    gps_suradnice       varchar(32)
+                        CHECK ( REGEXP_LIKE(
+                        gps_suradnice, '^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$', 'i') ),
+    miera_presakovania  NUMBER(5,2) NOT NULL,
+    oblast              VARCHAR(254) NOT NULL,
+    ulica               VARCHAR(254) NOT NULL,
+    poznavacie_znamenie VARCHAR(254) NOT NULL,
+    presakujuca_magia   INT,
 
     CONSTRAINT magicke_miesto_pk PRIMARY KEY (gps_suradnice),
-    CONSTRAINT magicke_miesto_fk FOREIGN KEY (presakujuci_element) REFERENCES element (magicka_znacka)
+    CONSTRAINT magicke_miesto_fk FOREIGN KEY (presakujuca_magia) REFERENCES magia (id)
 );
 
 CREATE TABLE kuzelnik_vlastni_grimoar
 (
-    msgn                INT,
+    msgn                VARCHAR(18),
     id_kuzelnika        INT,
-    od                  varchar(16),
-    do                  varchar(16),
+    od                  VARCHAR(63),
+    do                  VARCHAR(63),
 
     CONSTRAINT kuzelnik_vlastni_grimoar_pk PRIMARY KEY (msgn, id_kuzelnika),
     CONSTRAINT kuzelnik_vlastni_grimoar_fk_grimoar FOREIGN KEY (msgn) REFERENCES grimoar (msgn),
@@ -102,8 +142,8 @@ CREATE TABLE kuzelnik_vlastni_grimoar
 
 CREATE TABLE vedlajsi_element_kuzla
 (
-    magicka_znacka
-    ev_cislo
+    magicka_znacka  VARCHAR(2),
+    ev_cislo        INT,
 
     CONSTRAINT vedlajsi_element_kuzla_pk PRIMARY KEY (magicka_znacka, ev_cislo),
     CONSTRAINT vedlajsi_element_kuzla_fk_element FOREIGN KEY (magicka_znacka) REFERENCES element (magicka_znacka),
@@ -112,8 +152,8 @@ CREATE TABLE vedlajsi_element_kuzla
 
 CREATE TABLE grimoar_zoskupuje_kuzla
 (
-    msgn                 INT GENERATED AS IDENTITY NOT NULL,
-    ev_cislo      INT GENERATED AS IDENTITY NOT NULL,
+    msgn          VARCHAR(18),
+    ev_cislo      INT,
 
     CONSTRAINT grimoar_zoskupuje_kuzla_pk PRIMARY KEY (msgn, ev_cislo),
     CONSTRAINT grimoar_zoskupuje_kuzla_fk_msgn FOREIGN KEY (msgn) REFERENCES grimoar (msgn),
@@ -122,8 +162,8 @@ CREATE TABLE grimoar_zoskupuje_kuzla
 
 CREATE TABLE kuzelnikova_synergia_s_elementom
 (
-    id_kuzelnika         INT GENERATED AS IDENTITY NOT NULL,
-    magicka_znacka_elementu
+    id_kuzelnika                INT,
+    magicka_znacka_elementu     VARCHAR(2),
 
     CONSTRAINT kuzelnikova_synergia_s_elementom_pk PRIMARY KEY (id_kuzelnika, magicka_znacka_elementu),
     CONSTRAINT kuzelnikova_synergia_s_elementom_fk_kuzelnik FOREIGN KEY (id_kuzelnika) REFERENCES kuzelnik (id),
@@ -132,6 +172,114 @@ CREATE TABLE kuzelnikova_synergia_s_elementom
 
 
 --=======-NAPLNENIE DATAMI-=======--
+
+INSERT INTO element
+    VALUES ('Ob', 'obranné', 'ľudské bytosti', 'vzácny', 'tuhá');
+
+INSERT INTO element
+    VALUES ('Om', 'revitalizačné', 'ľudské bytosti', 'veľmi vzácny', 'tekutá');
+
+INSERT INTO element
+    VALUES ('Sl', 'útočné', 'škriatkovia', 'štandardný', 'tekutá');
+
+INSERT INTO element
+    VALUES ('Ur', 'obranné', 'zvieratá', 'vzácny', 'plynná');
+
+INSERT INTO magia
+    VALUES (DEFAULT, 'žtlá', 'kladný', 'C', '2 roky', 'Ur');
+
+INSERT INTO magia
+    VALUES (DEFAULT, 'zelená', 'kladný', 'E', '1 mesiac', 'Ob');
+
+INSERT INTO magia
+    VALUES (239, 'oranžová', 'negatívny', 'A', '1 hodina', 'Sl');
+
+INSERT INTO magia
+    VALUES (1781, 'fialová', 'negatívny', 'E', '10 minút', 'Sl');
+
+INSERT INTO kuzlo
+    VALUES (DEFAULT, 'E', 'verbálne', 4, 'Abrakando', 'Abraka Dabra', 'šepot - 30 dB', DEFAULT, DEFAULT);
+
+INSERT INTO kuzlo
+    VALUES (784, 'D', 'verbálne', 5, 'Simsalando', 'Simsala bimsala sim bim', 'krik - 100 dB', DEFAULT, DEFAULT);
+
+INSERT INTO kuzlo
+    VALUES (1212, 'A', 'materiálne', 7, 'Karavaggio', 'Kryptonium ecce', DEFAULT, 'čarovný prútik', 'štyri otočenia zápastím pravej ruky');
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'prázdny', NULL);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'plný', 784);
+
+INSERT INTO zvitok
+    VALUES (6543, 'plný', 1212);
+
+INSERT INTO grimoar
+    VALUES ('MSGN 80-204-0105-9', 8, '50%', '12-December-4020', 'použitý');
+
+INSERT INTO grimoar
+    VALUES ('MSGN 3-16-148410-X', 1, '84%', '10-December-8021', 'nový');
+
+INSERT INTO grimoar
+    VALUES ('MSGN 9971-5-0210-0', 3721, '12%', '1-November-2030', 'zachovalý');
+
+INSERT INTO kuzelnik
+    VALUES (DEFAULT, 'Bilbian Hop', '30-November-1807', 'B', 127.02);
+
+INSERT INTO kuzelnik
+    VALUES (172, 'Jakobian Hugger', '12-September-2000', 'E', 1200.00);
+
+INSERT INTO kuzelnik
+    VALUES (823, 'Halabala Vincentala', '13-December-1321', 'SS', 1500.89);
+
+INSERT INTO magicke_miesto
+    VALUES ('33.961973, 108.248309', 98.04, 'Tarpotove výšiny', 'Spodná', 'Tri topole v jednom kmeni', 239);
+
+INSERT INTO magicke_miesto
+    VALUES ('23.441948, 120.987931', 12.01, 'Medvedia hora', 'Krútivá', 'Nehasnúce ohnisko', 10000);
+
+INSERT INTO magicke_miesto
+    VALUES ('-15.417006, 166.934858', 100.00, 'Oskarie jaskyne', 'Kalabodova', 'Trhlina krútivého tvaru v stene', 1781);
+
+INSERT INTO kuzelnik_vlastni_grimoar
+    VALUES ('MSGN 80-204-0105-9', 10000, '24-03-1981', '15-07-2029');
+
+INSERT INTO kuzelnik_vlastni_grimoar
+    VALUES ('MSGN 3-16-148410-X', 172, '13-07-2012', '17-04-7054');
+
+INSERT INTO kuzelnik_vlastni_grimoar
+    VALUES ('MSGN 9971-5-0210-0', 823, '31-12-1902', '15-04-2021');
+
+INSERT INTO vedlajsi_element_kuzla
+    VALUES ('Ob', 784);
+
+INSERT INTO vedlajsi_element_kuzla
+    VALUES ('Ur', 784);
+
+INSERT INTO vedlajsi_element_kuzla
+    VALUES ('Ur', 1212);
+
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 9971-5-0210-0', 784);
+
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 9971-5-0210-0', 1212);
+
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 80-204-0105-9', 784);
+
+INSERT INTO kuzelnikova_synergia_s_elementom
+    VALUES (172, 'Sl');
+
+INSERT INTO kuzelnikova_synergia_s_elementom
+    VALUES (823, 'Ob');
+
+INSERT INTO kuzelnikova_synergia_s_elementom
+    VALUES (823, 'Om');
+
+INSERT INTO kuzelnikova_synergia_s_elementom
+    VALUES (10000, 'Ob');
 
 --=======-ZOBRAZENIE DAT-=======--
 
