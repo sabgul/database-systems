@@ -283,14 +283,14 @@ INSERT INTO kuzelnikova_synergia_s_elementom
 
 --=======-ZOBRAZENIE DAT-=======--
 
--- SELECT * FROM magia;
--- SELECT * FROM element;
--- SELECT * FROM zvitok;
--- SELECT * FROM kuzlo;
--- SELECT * FROM kuzelnik;
--- SELECT * FROM grimoar;
--- SELECT * FROM magicke_miesto;
--- SELECT * FROM kuzelnik_vlastni_grimoar;
--- SELECT * FROM vedlajsi_element_kuzla;
--- SELECT * FROM grimoar_zoskupuje_kuzla;
--- SELECT * FROM kuzelnikova_synergia_s_elementom;
+SELECT * FROM magia;
+SELECT * FROM element;
+SELECT * FROM zvitok;
+SELECT * FROM kuzlo;
+SELECT * FROM kuzelnik;
+SELECT * FROM grimoar;
+SELECT * FROM magicke_miesto;
+SELECT * FROM kuzelnik_vlastni_grimoar;
+SELECT * FROM vedlajsi_element_kuzla;
+SELECT * FROM grimoar_zoskupuje_kuzla;
+SELECT * FROM kuzelnikova_synergia_s_elementom;
