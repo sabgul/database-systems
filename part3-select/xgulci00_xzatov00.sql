@@ -281,7 +281,7 @@ INSERT INTO kuzelnikova_synergia_s_elementom
 INSERT INTO kuzelnikova_synergia_s_elementom
     VALUES (10000, 'Ob');
 
---=======-ZOBRAZENIE DAT-=======--
+--=======-ZOBRAZENIE VSETKYCH DAT-=======--
 
 -- SELECT * FROM magia;
 -- SELECT * FROM element;
