@@ -420,7 +420,7 @@ FROM zvitok WHERE EXISTS (
 ORDER BY zvitok.id;
 
 -- využitie predikátu IN s vnoreným selectom
--- Vypíše všetky kúzla, ktorých  hlavný element má tekutú formu výskytu
+-- Vypíše všetky kúzla, ktorých  primárny element má tekutú formu výskytu
 SELECT * FROM kuzlo
 WHERE kuzlo.primarny_element IN (
     SELECT element.magicka_znacka
