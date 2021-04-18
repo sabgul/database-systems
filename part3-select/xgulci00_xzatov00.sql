@@ -394,7 +394,7 @@ FROM magia
 -- Pre každé kúzlo vypíše všetky farby mágie, v ktorých dané kúzlo pôsobí na základe jeho hlavného elementu
 SELECT kuzlo.meno,
        magia.farba,
-       element.magicka_znacka
+       element.magicka_znacka AS magicka_znacka_hlavneho_elementu
 FROM kuzlo
     JOIN element ON kuzlo.primarny_element = element.magicka_znacka
     JOIN magia ON element.magicka_znacka = magia.element;
