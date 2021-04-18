@@ -74,7 +74,10 @@ CREATE TABLE kuzlo
     formula_vyvolania           VARCHAR(254) NOT NULL,
     hlasitost_vyvolania         VARCHAR(63) DEFAULT NULL,
     carovny_nastroj             VARCHAR(127) DEFAULT NULL,
-    gesto                       VARCHAR(254) DEFAULT NULL
+    gesto                       VARCHAR(254) DEFAULT NULL,
+    primarny_element            VARCHAR(2),
+
+    CONSTRAINT kuzlo_fk FOREIGN KEY (primarny_element) REFERENCES element (magicka_znacka) ON DELETE CASCADE
 );
 
 CREATE TABLE zvitok
@@ -99,8 +102,10 @@ CREATE TABLE grimoar
     mnozstvo_magie          VARCHAR(4) NOT NULL,
     datum_konca             DATE,
     stav                    VARCHAR(254) NOT NULL,
+    primarny_element        VARCHAR(2),
 
-    CONSTRAINT grimoar_pk PRIMARY KEY (msgn)
+    CONSTRAINT grimoar_pk PRIMARY KEY (msgn),
+    CONSTRAINT grimoar_fk FOREIGN KEY (primarny_element) REFERENCES element (magicka_znacka) ON DELETE CASCADE
 );
 
 CREATE TABLE kuzelnik
@@ -185,6 +190,24 @@ INSERT INTO element
 INSERT INTO element
     VALUES ('Ur', 'obranné', 'zvieratá', 'vzácny', 'plynná');
 
+INSERT INTO element
+    VALUES ('Oh', 'obranné', 'ľudské bytosti', 'vzácny', 'tuhá');
+
+INSERT INTO element
+    VALUES ('Ag', 'útočné', 'zvieratá', 'veľmi vzácny', 'tekutá');
+
+INSERT INTO element
+    VALUES ('Ey', 'útočné', 'elfovia', 'vzácny', 'plynná');
+
+INSERT INTO element
+    VALUES ('Xe', 'obranné', 'ľudské bytosti', 'štandardný', 'tuhá');
+
+INSERT INTO element
+    VALUES ('Xi', 'revitalizačné', 'škriatkovia', 'frekventovaný', 'tekutá');
+
+INSERT INTO element
+    VALUES ('Yz', 'revitalizačné', 'víly', 'frekventovaný', 'tuhá');
+
 INSERT INTO magia
     VALUES (DEFAULT, 'žtlá', 'kladný', 'C', '2 roky', 'Ur');
 
@@ -198,13 +221,43 @@ INSERT INTO magia
     VALUES (1781, 'fialová', 'negatívny', 'E', '10 minút', 'Sl');
 
 INSERT INTO kuzlo
-    VALUES (DEFAULT, 'E', 'verbálne', 4, 'Abrakando', 'Abraka Dabra', 'šepot - 30 dB', DEFAULT, DEFAULT);
+    VALUES (DEFAULT, 'E', 'verbálne', 4, 'Abrakando', 'Abraka Dabra', 'šepot - 30 dB', DEFAULT, DEFAULT, 'Ob');
 
 INSERT INTO kuzlo
-    VALUES (784, 'D', 'verbálne', 5, 'Simsalando', 'Simsala bimsala sim bim', 'krik - 100 dB', DEFAULT, DEFAULT);
+    VALUES (784, 'D', 'verbálne', 5, 'Simsalando', 'Simsala bimsala sim bim', 'krik - 100 dB', DEFAULT, DEFAULT, 'Ur');
 
 INSERT INTO kuzlo
-    VALUES (1212, 'A', 'materiálne', 7, 'Karavaggio', 'Kryptonium ecce', DEFAULT, 'čarovný prútik', 'štyri otočenia zápastím pravej ruky');
+    VALUES (1212, 'A', 'materiálne', 7, 'Karavaggio', 'Kryptonium ecce', DEFAULT, 'čarovný prútik', 'štyri otočenia zápastím pravej ruky', 'Sl');
+
+INSERT INTO kuzlo
+    VALUES (1234, 'B', 'verbálne', 4, 'Salamalamama', 'Sali soli sele', 'šepot - 30 dB',  DEFAULT, DEFAULT, 'Ur');
+
+INSERT INTO kuzlo
+    VALUES (278, 'D', 'materiálne', 2, 'Calamenium', 'Hopsa hejsa colom dejsa', DEFAULT, 'prúty zo starej vŕby', 'dva výskoky na pravej nohe', 'Ob');
+
+INSERT INTO kuzlo
+    VALUES (3421, 'A', 'materiálne', 10, 'Sebared', 'Expecto expectum', DEFAULT, 'čarovný prútik', 'dvihnutie prútika držaného v ľavej ruke nad hlavu kúzelníka', 'Ob');
+
+INSERT INTO kuzlo
+    VALUES (573, 'D', 'verbálne', 2, 'Klipsnerdo', 'Kolium koli bum', 'krik - 100 dB',  DEFAULT, DEFAULT, 'Sl');
+
+INSERT INTO kuzlo
+    VALUES (2211, 'A', 'verbálne', 10, 'Tistonaro', 'Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch', 'šepot - 30 dB',  DEFAULT, DEFAULT, 'Om');
+
+INSERT INTO kuzlo
+    VALUES (5723, 'D', 'materiálne', 4, 'Gohochoch', 'Sarati bumbi rop', DEFAULT, 'magický kotlík', 'tri žmurknutia a lusknutie prstami pravej ruky', 'Om');
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'prázdny', NULL);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'prázdny', NULL);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'prázdny', NULL);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'prázdny', NULL);
 
 INSERT INTO zvitok
     VALUES (DEFAULT, 'prázdny', NULL);
@@ -215,14 +268,26 @@ INSERT INTO zvitok
 INSERT INTO zvitok
     VALUES (6543, 'plný', 1212);
 
-INSERT INTO grimoar
-    VALUES ('MSGN 80-204-0105-9', 8, '50%', '12-December-4020', 'použitý');
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'plný', 1234);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'plný', 278);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'plný', 3421);
+
+INSERT INTO zvitok
+    VALUES (DEFAULT, 'plný', 573);
 
 INSERT INTO grimoar
-    VALUES ('MSGN 3-16-148410-X', 1, '84%', '10-December-8021', 'nový');
+    VALUES ('MSGN 80-204-0105-9', 8, '50%', '12-December-4020', 'použitý', 'Ob');
 
 INSERT INTO grimoar
-    VALUES ('MSGN 9971-5-0210-0', 3721, '12%', '1-November-2030', 'zachovalý');
+    VALUES ('MSGN 3-16-148410-X', 1, '84%', '10-December-8021', 'nový', 'Om');
+
+INSERT INTO grimoar
+    VALUES ('MSGN 9971-5-0210-0', 3721, '12%', '1-November-2030', 'zachovalý', 'Ur');
 
 INSERT INTO kuzelnik
     VALUES (DEFAULT, 'Bilbian Hop', '30-November-1807', 'B', 127.02);
@@ -269,6 +334,18 @@ INSERT INTO grimoar_zoskupuje_kuzla
 INSERT INTO grimoar_zoskupuje_kuzla
     VALUES ('MSGN 80-204-0105-9', 784);
 
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 3-16-148410-X', 1234);
+
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 3-16-148410-X', 278);
+
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 3-16-148410-X', 573);
+
+INSERT INTO grimoar_zoskupuje_kuzla
+    VALUES ('MSGN 3-16-148410-X', 5723);
+
 INSERT INTO kuzelnikova_synergia_s_elementom
     VALUES (172, 'Sl');
 
@@ -281,7 +358,7 @@ INSERT INTO kuzelnikova_synergia_s_elementom
 INSERT INTO kuzelnikova_synergia_s_elementom
     VALUES (10000, 'Ob');
 
---=======-ZOBRAZENIE VSETKYCH DAT-=======--
+--=======-ZOBRAZENIE VŠETKÝCH DÁT-=======--
 
 -- SELECT * FROM magia;
 -- SELECT * FROM element;
@@ -295,42 +372,74 @@ INSERT INTO kuzelnikova_synergia_s_elementom
 -- SELECT * FROM grimoar_zoskupuje_kuzla;
 -- SELECT * FROM kuzelnikova_synergia_s_elementom;
 
---=======-SELECTY - 3.cast-=======--
--- SQL skript obsahující dotazy SELECT musí obsahovat konkrétně alespoň dva dotazy využívající spojení dvou tabulek,
--- spojenie dvoch tabuliek
--- Zobrazenie všetkých grimoárov a kúzel, ktoré zoskupujú
-
+--=======-SELECTY - 3.časť projektu-=======--
 
 -- spojenie dvoch tabuliek
--- Zobrazenie všetkých zvitkov, a kúzel ktoré obsahujú
--- Zobrazenie aktívnych - plných zvitkov, a kúzla ktoré obsahujú
--- Pre každé magické miesto vypíše farbu a charakter mágie, ktorú presakuje
-
--- jeden využívající spojení tří tabulek,
--- spojenie troch tabuliek
--- V akej mágii môže kúzelník pôsobiť na základe jeho synergie s elementami
-SELECT zlodej.meno, zlodej.prezyvka, zlocin.ID_zlocin FROM zlodej INNER JOIN povolenie on zlodej.rodne_cislo = povolenie.rodne_cislo INNER JOIN zlocin on povolenie.ID_zlocin = zlocin.ID_zlocin;
-SELECT kuzelnik.pseudonym,
+-- Zobrazenie všetkých grimoárov a ich primárnych elementov spolu s typom
+SELECT grimoar.msgn,
        element.magicka_znacka,
+       element.typ
+FROM element
+    JOIN grimoar ON element.magicka_znacka = grimoar.primarny_element;
+
+-- spojenie dvoch tabuliek
+-- Pre každé magické miesto vypíše farbu a charakter mágie, ktorú presakuje
+SELECT magicke_miesto.gps_suradnice,
        magia.farba,
-       kuzelnikova_synergia_s_elementom
-FROM magia JOIN element ON element.magicka_znacka = magia.element JOIN kuzelnik ON kuzelnikova_synergia;
+       magia.charakter
+FROM magia
+    JOIN magicke_miesto ON magia.id = magicke_miesto.presakujuca_magia;
 
--- dva dotazy s klauzulí GROUP BY a agregační funkcí,
--- dotaz s klauzulou GROUP BY a agregačnou funkciou
--- Pre každý grimoár vypíše počet kúzel, ktoré obsahuje
+-- spojenie troch tabuliek
+-- Pre každé kúzlo vypíše všetky farby mágie, v ktorých dané kúzlo pôsobí na základe jeho hlavného elementu
+SELECT kuzlo.meno,
+       magia.farba,
+       element.magicka_znacka
+FROM kuzlo
+    JOIN element ON kuzlo.primarny_element = element.magicka_znacka
+    JOIN magia ON element.magicka_znacka = magia.element;
 
--- dotaz s klauzulou GROUP BY a agregačnou funkciou
---
-
--- jeden dotaz obsahující predikát EXISTS a jeden dotaz s predikátem IN s vnořeným selectem (nikoliv IN s množinou konstantních dat).
 -- využitie predikátu EXISTS
---
+-- Vypíše všetky zvitky, ktoré sú prázdne (neobsahujú žiadne kúzlo)
+SELECT zvitok.id,
+       zvitok.stav
+FROM zvitok WHERE NOT EXISTS (
+    SELECT *
+    FROM kuzlo
+    WHERE kuzlo.ev_cislo = zvitok.kuzlo)
+ORDER BY zvitok.id;
+
+-- Vypíše zvitky, ktoré sú plné aj s kúzlom ktoré obsahujú
+SELECT zvitok.id,
+       zvitok.stav,
+       zvitok.kuzlo
+FROM zvitok WHERE EXISTS (
+    SELECT *
+    FROM kuzlo
+    WHERE kuzlo.ev_cislo = zvitok.kuzlo)
+ORDER BY zvitok.id;
 
 -- využitie predikátu IN s vnoreným selectom
--- Vypíše všetkých kúzla, ktorých  hlavný element má tekutú formu výskytu
+-- Vypíše všetky kúzla, ktorých  hlavný element má tekutú formu výskytu
+SELECT * FROM kuzlo
+WHERE kuzlo.primarny_element IN (
+    SELECT element.magicka_znacka
+    FROM element
+    WHERE element.forma_vyskytu = 'tekutá');
 
--- Na akých miestach presakuje element 'Ob' - obranium
--- Zobrazenie aktívnych - plných zvitkov, a kúzla ktoré obsahujú
+-- dotaz s klauzulou GROUP BY a agregačnou funkciou
+-- Vypíše koľko elementov patrí do každej úrovne vzácnosti
+SELECT
+       uroven_vzacnosti,
+       COUNT(*) pocet_elementov
+FROM element
+GROUP BY uroven_vzacnosti;
 
--- U každého z dotazů musí být (v komentáři SQL kódu) popsáno srozumitelně, jaká data hledá daný dotaz (jaká je jeho funkce v aplikaci).
+-- dotaz s klauzulou GROUP BY a agregačnou funkciou
+-- Vypíše všetky grimoáre a počet kúzel, ktoré obsahujú
+SELECT
+    grimoar.msgn,
+    COUNT(grimoar_zoskupuje_kuzla.ev_cislo) AS pocet_kuzel
+FROM grimoar
+JOIN grimoar_zoskupuje_kuzla ON grimoar.msgn = grimoar_zoskupuje_kuzla.msgn
+GROUP BY grimoar.msgn;
