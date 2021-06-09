@@ -450,7 +450,7 @@ INSERT INTO kuzelnikova_synergia_s_elementom
 -- Pre oblasť zadanú užívateľom je teda vypísaná štatistika celkového počtu miest,
 -- z toho pozitívnych a negatívnych.
 
-CREATE OR REPLACE PROCEDURE pozitivita_magickeho_miesta
+CREATE OR REPLACE PROCEDURE pozitivita_magickej_oblasti
     (oblast_miesta IN VARCHAR)
 AS
     pozitivne_miesta NUMBER := 0;
@@ -498,17 +498,90 @@ AS
 
         EXCEPTION WHEN NO_DATA_FOUND THEN
         BEGIN
-           DBMS_OUTPUT.put_line('error: dáta v procedure pozitivita_magickeho_miesta() neboli nájdené!');
+           DBMS_OUTPUT.put_line('error: dáta v procedure pozitivita_magickej_oblasti() neboli nájdené!');
         END;
     END;
 
 -- ukážka funkcie procedúry
-BEGIN pozitivita_magickeho_miesta('Tarpotove výšiny'); END;
-BEGIN pozitivita_magickeho_miesta('Neexistujúca oblasť'); END;
+BEGIN pozitivita_magickej_oblasti('Tarpotove výšiny'); END;
+BEGIN pozitivita_magickej_oblasti('Neexistujúca oblasť'); END;
 
 
 --2----------------------------------------
 
+-- Procedúra príjme ID kúzelníka a vypíše koľko kúzel je schopný zoslať za pomoci grimoárov, ktoré vlastní.
+-- Následne vypíše koľko z týchto kúzel je verbálnych a koľko materiálnych spolu s prepočtom na percentá z
+-- celkových kúziel, ktoré dokáže zoslať pomocou grimoárov.
+-- Na záver vypíše všetky kúzelné predmety potrebné na zoslanie všetkých materiálnych kúziel
+CREATE OR REPLACE PROCEDURE kuzelnikove_kuzla (kuzelnik_ID IN VARCHAR2)
+IS
+    grimoare_celkom     NUMBER := 0;
+    kuzelnik_existuje   NUMBER := 0;    -- 0 - neexistuje, 1 - existuje
+    pocet_kuzel_celkom  NUMBER := 0;
+
+    it                  NUMBER := 0;
+    it2                 NUMBER := 0;
+
+    materialne          NUMBER := 0;
+    materialne_it1      NUMBER := 0;
+    materialne_it2      NUMBER := 0;
+    materialne_tmp      NUMBER := 0;
+    materialne_percenta NUMBER := 0;
+    je_materialne       NUMBER := 0;
+
+    nastroj             CHAR(100);
+
+    TYPE t_kuzelka IS TABLE OF grimoar_zoskupuje_kuzla.ev_cislo%TYPE INDEX BY PLS_INTEGER;
+    kuzelka                             t_kuzelka;
+    materialne_kuzelka                  t_kuzelka;
+
+BEGIN
+
+    SELECT COUNT(*) INTO grimoare_celkom FROM kuzelnik_vlastni_grimoar WHERE id_kuzelnika = kuzelnik_ID;
+    IF grimoare_celkom = 0 THEN
+        dbms_output.put_line('Kúzelník s id ' || kuzelnik_ID || 'neexistuje, alebo nevlastní žiadne grimoare.');
+        RETURN;
+    END IF;
+
+    SELECT COUNT(*) INTO pocet_kuzel_celkom FROM grimoar_zoskupuje_kuzla WHERE MSGN IN (SELECT MSGN FROM kuzelnik_vlastni_grimoar WHERE ID_KUZELNIKA = kuzelnik_ID);
+    DBMS_OUTPUT.PUT_LINE('------------------------------------------------------------------------------------');
+    DBMS_OUTPUT.PUT_LINE('Kúzelník s id ' || kuzelnik_ID || ' dokáže podľa grimoárov ktoré vlastní zoslať ' || TO_CHAR(pocet_kuzel_celkom) || ' kúzel.');
+
+    FOR kuzelko_i IN (SELECT * FROM grimoar_zoskupuje_kuzla WHERE MSGN IN (SELECT MSGN FROM kuzelnik_vlastni_grimoar WHERE ID_KUZELNIKA = kuzelnik_ID))
+    LOOP
+        kuzelka(it) := kuzelko_i.ev_cislo;
+        SELECT COUNT(*) INTO je_materialne FROM kuzlo WHERE ev_cislo = kuzelko_i.ev_cislo AND typ = 'materiálne';
+        IF je_materialne != 0 THEN
+            materialne_kuzelka(materialne_it1) := kuzelko_i.ev_cislo;
+            materialne_it1 := materialne_it1 + 1;
+        END IF;
+        it := it + 1;
+    END LOOP;
+
+    WHILE it2 < it
+    LOOP
+        SELECT COUNT(*) INTO materialne_tmp FROM kuzlo WHERE ev_cislo = kuzelka(it2) AND typ = 'materiálne';
+        materialne := materialne + materialne_tmp;
+        it2 := it2 + 1;
+    END LOOP;
+
+    materialne_percenta := ROUND((100 / pocet_kuzel_celkom) * materialne, 1);
+    DBMS_OUTPUT.PUT_LINE('   Z toho verbálnych : '         || TO_CHAR(pocet_kuzel_celkom - materialne)     || ' (' || TO_CHAR(100 - materialne_percenta)   || '%)' );
+    DBMS_OUTPUT.PUT_LINE('   Z toho materiálnych : '       || TO_CHAR(materialne)                          || ' (' || TO_CHAR(materialne_percenta)         || '%)' );
+
+    DBMS_OUTPUT.PUT_LINE('Čarovné predmety potrebné na zoslanie materiálnych kúzel:');
+
+    WHILE(materialne_it2 < materialne_it1)
+    LOOP
+        SELECT CAROVNY_NASTROJ INTO nastroj FROM kuzlo WHERE ev_cislo = materialne_kuzelka(materialne_it2);
+        DBMS_OUTPUT.PUT_LINE('   - ' || nastroj);
+        materialne_it2 := materialne_it2 + 1;
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('------------------------------------------------------------------------------------');
+END;
+
+-- výpis hodnôt
+BEGIN kuzelnikove_kuzla('172'); END;
 
 
 ----------------======= EXPLAIN PLAN =======----------------
@@ -548,6 +621,7 @@ FROM grimoar
 GROUP BY grimoar.msgn, kuzelnik_vlastni_grimoar.id_kuzelnika, kuzelnik.uroven_kuzlenia;
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
 
+DROP INDEX uroven;
 ----------------======= MATERIALIZOVANÝ POHĽAD =======-----------------
 -- vypíše všetky grimoáre, id ich majiteľa a počet kúzel ktoré zoskupujú
 CREATE MATERIALIZED VIEW grimoar_majitel_pocet_kuzel AS
@@ -559,6 +633,7 @@ FROM grimoar
 JOIN grimoar_zoskupuje_kuzla ON grimoar.msgn = grimoar_zoskupuje_kuzla.msgn
 JOIN kuzelnik_vlastni_grimoar ON grimoar.msgn = kuzelnik_vlastni_grimoar.msgn
 GROUP BY grimoar.msgn, kuzelnik_vlastni_grimoar.id_kuzelnika;
+
 
 -- zobrazenie materializovaného pohľadu
 SELECT * FROM grimoar_majitel_pocet_kuzel;
@@ -595,8 +670,8 @@ GRANT ALL ON grimoar_zoskupuje_kuzla TO XZATOV00;
 GRANT ALL ON kuzelnikova_synergia_s_elementom TO XZATOV00;
 
 -- povolenie pre procedury
-GRANT EXECUTE ON pozitivita_magickeho_miesta TO XZATOV00;
--- GRANT EXECUTE ON name_of_procedure2 TO XZATOV00;
+GRANT EXECUTE ON pozitivita_magickej_oblasti TO XZATOV00;
+GRANT EXECUTE ON kuzelnikove_kuzla TO XZATOV00;
 
 -- povolenie pre materialized view
 GRANT ALL ON grimoar_majitel_pocet_kuzel TO XZATOV00;
